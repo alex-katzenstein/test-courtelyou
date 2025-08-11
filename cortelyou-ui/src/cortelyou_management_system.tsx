@@ -5,6 +5,10 @@ import {
   BarChart3, FileText, Settings, Home, Truck, DollarSign
 } from 'lucide-react';
 import ProductionPlanning from './ProductionPlanning';
+import InventoryLots from './inventory/InventoryLots';
+import { InventoryLotsProvider } from './inventory/InventoryLotsContext';
+import WorkOrders from './work-orders/WorkOrders';
+import { WorkOrdersProvider } from './work-orders/WorkOrdersContext';
 
 export default function CortelyouManagementSystem() {
   const [activeView, setActiveView] = useState('dashboard');
@@ -417,7 +421,7 @@ export default function CortelyouManagementSystem() {
       case 'sales-orders':
         return renderSalesOrders();
       case 'work-orders':
-        return renderPlaceholderView('Work Orders', 'Multi-stage production tracking with real-time updates');
+        return <WorkOrders />;
       case 'machine-tablets':
         return renderPlaceholderView('Machine Tablets', 'Tablet interfaces for production line machines');
       case 'employee-tracking':
@@ -427,7 +431,7 @@ export default function CortelyouManagementSystem() {
       case 'delivery-schedule':
         return renderPlaceholderView('Delivery Schedule', 'Multi-date delivery planning and logistics');
       case 'inventory':
-        return renderPlaceholderView('Inventory Management', 'Stock tracking with lot number traceability');
+        return <InventoryLots />;
       case 'purchasing':
         return renderPlaceholderView('Purchasing', 'Vendor management and purchase order tracking');
       case 'reports':
@@ -442,45 +446,49 @@ export default function CortelyouManagementSystem() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {renderSidebar()}
-      
-      {/* Main Content Area */}
-      <div className="ml-64">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="text-2xl">👋</div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">Good Morning, John!</h1>
-                <p className="text-sm text-gray-600">Here's what's happening with your operations today.</p>
+    <InventoryLotsProvider>
+      <WorkOrdersProvider>
+        <div className="min-h-screen bg-gray-50">
+        {renderSidebar()}
+        
+        {/* Main Content Area */}
+        <div className="ml-64">
+          {/* Header */}
+          <div className="bg-white border-b border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="text-2xl">👋</div>
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">Good Morning, John!</h1>
+                  <p className="text-sm text-gray-600">Here's what's happening with your operations today.</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 w-64"
-                />
-              </div>
-              <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
-                <option>2024-2025</option>
-              </select>
-              <div className="relative">
-                <button className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                  1
-                </button>
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 w-64"
+                  />
+                </div>
+                <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
+                  <option>2024-2025</option>
+                </select>
+                <div className="relative">
+                  <button className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    1
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Dynamic Content */}
-        {renderMainContent()}
-      </div>
-    </div>
+          {/* Dynamic Content */}
+          {renderMainContent()}
+        </div>
+        </div>
+      </WorkOrdersProvider>
+    </InventoryLotsProvider>
   );
 }
