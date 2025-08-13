@@ -1,4 +1,4 @@
-import type { WorkOrder, TimeEntry, WorkOrderUpdate, ProductionArea, WorkOrderStatus } from './types';
+import type { WorkOrder, TimeEntry, WorkOrderUpdate, WorkOrderStatus } from './types';
 
 // Simple ID generator for in-memory data
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -17,6 +17,7 @@ export const initialWorkOrdersState = (): WorkOrdersState => ({
       sku: 'Rugelach Chocolate',
       productionArea: 'mixing-room',
       plannedQty: 15,
+      plannedPans: 15,
       actualQty: 12,
       wasteQty: 1,
       status: 'active',
@@ -26,6 +27,7 @@ export const initialWorkOrdersState = (): WorkOrdersState => ({
       actualStart: '2025-08-11T06:15:00Z',
       assignedEmployees: ['emp-001', 'emp-002'],
       machineId: 'mixer-01',
+      productionPlanningId: 'pp-001',
       recipe: {
         id: 'recipe-001',
         name: 'Rugelach Chocolate Base',
@@ -49,11 +51,13 @@ export const initialWorkOrdersState = (): WorkOrdersState => ({
       sku: 'Babka Cinnamon',
       productionArea: 'pre-bake-prep',
       plannedQty: 8,
+      plannedPans: 8,
       status: 'pending',
       priority: 'normal',
       scheduledStart: '2025-08-11T10:00:00Z',
       scheduledEnd: '2025-08-11T14:00:00Z',
       assignedEmployees: ['emp-003'],
+      productionPlanningId: 'pp-002',
       recipe: {
         id: 'recipe-002',
         name: 'Babka Cinnamon Prep',
@@ -76,6 +80,7 @@ export const initialWorkOrdersState = (): WorkOrdersState => ({
       sku: 'Challah Traditional',
       productionArea: 'bake-room',
       plannedQty: 20,
+      plannedPans: 20,
       actualQty: 18,
       wasteQty: 2,
       status: 'completed',
@@ -86,6 +91,7 @@ export const initialWorkOrdersState = (): WorkOrdersState => ({
       actualEnd: '2025-08-11T17:45:00Z',
       assignedEmployees: ['emp-004', 'emp-005'],
       machineId: 'oven-02',
+      productionPlanningId: 'pp-003',
       notes: 'Completed ahead of schedule',
       createdAt: '2025-08-10T21:00:00Z',
       updatedAt: '2025-08-11T17:45:00Z'
@@ -96,11 +102,13 @@ export const initialWorkOrdersState = (): WorkOrdersState => ({
       sku: 'Bagels Everything',
       productionArea: 'finishing',
       plannedQty: 12,
+      plannedPans: 12,
       status: 'paused',
       priority: 'normal',
       scheduledStart: '2025-08-11T18:00:00Z',
       scheduledEnd: '2025-08-11T22:00:00Z',
       assignedEmployees: ['emp-006'],
+      productionPlanningId: 'pp-004',
       notes: 'Waiting for topping delivery',
       createdAt: '2025-08-11T08:00:00Z',
       updatedAt: '2025-08-11T18:30:00Z'
@@ -138,12 +146,20 @@ export const initialWorkOrdersState = (): WorkOrdersState => ({
       id: 'update-001',
       workOrderId: 'wo-001',
       timestamp: '2025-08-11T06:15:00Z',
+      type: 'generated_from_planning',
+      details: 'Work order generated from production planning slot for Rugelach Chocolate',
+      updatedBy: 'Production Planning System'
+    },
+    {
+      id: 'update-002',
+      workOrderId: 'wo-001',
+      timestamp: '2025-08-11T06:15:00Z',
       type: 'status_change',
       details: 'Work order started',
       updatedBy: 'John Smith'
     },
     {
-      id: 'update-002',
+      id: 'update-003',
       workOrderId: 'wo-003',
       timestamp: '2025-08-11T17:45:00Z',
       type: 'status_change',
@@ -228,4 +244,66 @@ export function endTimeEntry(state: WorkOrdersState, timeEntryId: string): WorkO
       : entry
   );
   return { ...state, timeEntries };
+}
+
+// Map production line names to production areas
+function mapLineToProductionArea(line: string): string {
+  const mapping: Record<string, string> = {
+    'Mixing Room': 'mixing-room',
+    'Pre-Bake Prep': 'pre-bake-prep', 
+    'Rolls Bake Room': 'rolls-bake-room',
+    'Bake Room': 'bake-room',
+    'Finishing': 'finishing',
+    'Shipping Prep': 'shipping-prep'
+  };
+  return mapping[line] || 'mixing-room';
+}
+
+export function generateWorkOrderFromPlanning(
+  state: WorkOrdersState,
+  planningSlot: {
+    id: number;
+    sku: string;
+    line: string;
+    timeSlot: string;
+    pansFromOrders: number;
+    pansStandard: number;
+  }
+): WorkOrdersState {
+  const now = new Date().toISOString();
+  const [startTime, endTime] = planningSlot.timeSlot.split('-');
+  const today = new Date().toISOString().split('T')[0];
+  
+  const workOrder: WorkOrder = {
+    id: uid(),
+    woNumber: `WO-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
+    sku: planningSlot.sku,
+    productionArea: mapLineToProductionArea(planningSlot.line) as any,
+    plannedQty: planningSlot.pansFromOrders + planningSlot.pansStandard,
+    plannedPans: planningSlot.pansFromOrders + planningSlot.pansStandard,
+    status: 'pending',
+    priority: 'normal',
+    scheduledStart: `${today}T${startTime}:00Z`,
+    scheduledEnd: `${today}T${endTime}:00Z`,
+    assignedEmployees: [],
+    productionPlanningId: `pp-${planningSlot.id}`,
+    notes: `Generated from production planning slot ${planningSlot.id}`,
+    createdAt: now,
+    updatedAt: now
+  };
+
+  const update: WorkOrderUpdate = {
+    id: uid(),
+    workOrderId: workOrder.id,
+    timestamp: now,
+    type: 'generated_from_planning',
+    details: `Work order generated from production planning slot for ${planningSlot.sku}`,
+    updatedBy: 'Production Planning System'
+  };
+
+  return {
+    ...state,
+    workOrders: [workOrder, ...state.workOrders],
+    updates: [update, ...state.updates]
+  };
 }

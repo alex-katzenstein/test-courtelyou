@@ -16,6 +16,7 @@ export type WorkOrder = {
   sku: string;
   productionArea: ProductionArea;
   plannedQty: number;
+  plannedPans?: number; // Link to production planning pan requirements
   actualQty?: number;
   wasteQty?: number;
   freezeQty?: number;
@@ -29,6 +30,7 @@ export type WorkOrder = {
   machineId?: string;
   recipe?: Recipe;
   notes?: string;
+  productionPlanningId?: string; // Reference to production planning slot
   createdAt: string;
   updatedAt: string;
 };
@@ -65,7 +67,19 @@ export type WorkOrderUpdate = {
   id: string;
   workOrderId: string;
   timestamp: string;
-  type: 'status_change' | 'quantity_update' | 'employee_assigned' | 'note_added';
+  type: 'status_change' | 'quantity_update' | 'employee_assigned' | 'note_added' | 'generated_from_planning';
   details: string;
   updatedBy: string;
+};
+
+export type ProductionPlanningSlot = {
+  id: number;
+  sku: string;
+  line: string;
+  timeSlot: string;
+  pansFromOrders: number;
+  pansStandard: number;
+  status: string;
+  hasWorkOrder?: boolean;
+  workOrderId?: string;
 };

@@ -1,89 +1,51 @@
 import React, { useState } from 'react';
-import { Calendar, Plus, Package, Clock } from 'lucide-react';
 
 type Props = {
-  productionLines: string[];
-  selectedDate: string;
-  setSelectedDate: (v: string) => void;
-  selectedLine: string;
-  setSelectedLine: (v: string) => void;
-};
-
-const getStatusColor = (status: string) => {
-  const colors: Record<string, string> = {
-    active: 'bg-green-100 text-green-800',
-    pending: 'bg-orange-100 text-orange-800',
-    scheduled: 'bg-blue-100 text-blue-800',
-    'capacity-shortage': 'bg-red-100 text-red-800',
-    confirmed: 'bg-green-100 text-green-800',
-    'pending-schedule': 'bg-yellow-100 text-yellow-800',
-    'in-production': 'bg-blue-100 text-blue-800',
-  };
-  return colors[status] || 'bg-gray-100 text-gray-800';
-};
-
-const getStatusText = (status: string) => {
-  const statusTexts: Record<string, string> = {
-    active: 'In Production',
-    pending: 'Ready to Start',
-    scheduled: 'Scheduled',
-    'capacity-shortage': 'Capacity Shortage',
-    confirmed: 'Confirmed',
-    'pending-schedule': 'Pending Schedule',
-    'in-production': 'In Production',
-  };
-  return statusTexts[status] || status;
+  productionLines?: string[];
+  selectedDate?: string;
+  setSelectedDate?: (v: string) => void;
+  selectedLine?: string;
+  setSelectedLine?: (v: string) => void;
 };
 
 export default function ProductionPlanning({
-  productionLines,
-  selectedDate,
-  setSelectedDate,
-  selectedLine,
-  setSelectedLine,
+  productionLines = [],
+  selectedDate = new Date().toISOString().split('T')[0],
+  setSelectedDate = () => {},
+  selectedLine = 'all',
+  setSelectedLine = () => {},
 }: Props) {
-  // Expanded production data for realistic scale
-  const productionSchedule = [
-    { id: 1, sku: 'Rugelach Chocolate', line: 'Mixing Room', timeSlot: '06:00-10:00', pansFromOrders: 12, pansStandard: 3, status: 'confirmed' },
-    { id: 2, sku: 'Babka Cinnamon', line: 'Mixing Room', timeSlot: '10:00-14:00', pansFromOrders: 8, pansStandard: 2, status: 'confirmed' },
-    { id: 3, sku: 'Challah Traditional', line: 'Bake Room', timeSlot: '06:00-10:00', pansFromOrders: 18, pansStandard: 5, status: 'confirmed' },
-    { id: 4, sku: 'Bagels Everything', line: 'Bake Room', timeSlot: '10:00-14:00', pansFromOrders: 12, pansStandard: 4, status: 'confirmed' },
-    { id: 5, sku: 'Rolls Dinner', line: 'Rolls Bake Room', timeSlot: '14:00-18:00', pansFromOrders: 15, pansStandard: 5, status: 'capacity-shortage' },
-    { id: 6, sku: 'Cookies Chocolate Chip', line: 'Pre-Bake Prep', timeSlot: '06:00-10:00', pansFromOrders: 6, pansStandard: 2, status: 'confirmed' },
-    { id: 7, sku: 'Muffins Blueberry', line: 'Bake Room', timeSlot: '14:00-18:00', pansFromOrders: 10, pansStandard: 3, status: 'confirmed' },
-    { id: 8, sku: 'Danish Pastry', line: 'Finishing', timeSlot: '18:00-22:00', pansFromOrders: 8, pansStandard: 2, status: 'pending' },
-    { id: 9, sku: 'Croissants Plain', line: 'Pre-Bake Prep', timeSlot: '10:00-14:00', pansFromOrders: 14, pansStandard: 4, status: 'confirmed' },
-    { id: 10, sku: 'Sourdough Bread', line: 'Bake Room', timeSlot: '18:00-22:00', pansFromOrders: 20, pansStandard: 6, status: 'confirmed' },
-    { id: 11, sku: 'Pumpernickel Bread', line: 'Bake Room', timeSlot: '22:00-02:00', pansFromOrders: 5, pansStandard: 2, status: 'scheduled' },
-    { id: 12, sku: 'Cinnamon Rolls', line: 'Finishing', timeSlot: '06:00-10:00', pansFromOrders: 12, pansStandard: 3, status: 'confirmed' },
-  ];
-
-  const [viewMode, setViewMode] = useState<'summary' | 'detailed'>('summary');
-  const [showAddSlot, setShowAddSlot] = useState(false);
-
-  // Aggregate data by production line
-  const lineAggregates = productionLines.map((line) => {
-    const lineItems = productionSchedule.filter((item) => item.line === line);
-    const totalFromOrders = lineItems.reduce((sum, item) => sum + item.pansFromOrders, 0);
-    const totalStandard = lineItems.reduce((sum, item) => sum + item.pansStandard, 0);
-    const skuCount = lineItems.length;
-    return {
-      line,
-      totalFromOrders,
-      totalStandard,
-      totalPans: totalFromOrders + totalStandard,
-      skuCount,
-      items: lineItems,
-    };
-  });
-
-  const filteredSchedule =
-    selectedLine === 'all'
-      ? productionSchedule
-      : productionSchedule.filter((item) => item.line === selectedLine);
-
+  const [viewMode] = useState<'summary' | 'detailed'>('summary');
+  
   return (
     <div className="p-6">
+      <h1 className="text-2xl font-semibold text-gray-900">Production Planning (Debug Mode)</h1>
+      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h3 className="font-medium text-yellow-800">Debug Information</h3>
+        <pre className="mt-2 p-2 bg-white text-xs overflow-auto">
+          {JSON.stringify({
+            productionLines,
+            selectedDate,
+            selectedLine,
+            viewMode
+          }, null, 2)}
+        </pre>
+      </div>
+    </div>
+  );
+}
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowCapacityModal(true)}
+              className="flex items-center px-3 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200"
+            >
+              View Details
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Production Planning</h1>
@@ -195,27 +157,107 @@ export default function ProductionPlanning({
                   <span className="text-sm text-gray-600">Total:</span>
                   <span className="font-medium text-gray-900">{aggregate.totalPans} pans</span>
                 </div>
+                
+                {/* Capacity Utilization Bar */}
+                <div className="pt-2 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-gray-600">Capacity</span>
+                    <span className={`text-xs font-medium ${
+                      capacityAnalysis.lineCapacities[aggregate.line] && 
+                      capacityAnalysis.lineCapacities[aggregate.line].used > capacityAnalysis.lineCapacities[aggregate.line].capacity
+                        ? 'text-red-600' : 'text-gray-600'
+                    }`}>
+                      {capacityAnalysis.lineCapacities[aggregate.line] ? 
+                        `${capacityAnalysis.lineCapacities[aggregate.line].used}/${capacityAnalysis.lineCapacities[aggregate.line].capacity} pans` : 
+                        `${aggregate.totalPans}/100 pans`
+                      }
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full ${
+                        capacityAnalysis.lineCapacities[aggregate.line] && 
+                        capacityAnalysis.lineCapacities[aggregate.line].used > capacityAnalysis.lineCapacities[aggregate.line].capacity
+                          ? 'bg-red-500' : 'bg-blue-500'
+                      }`}
+                      style={{
+                        width: `${Math.min(100, capacityAnalysis.lineCapacities[aggregate.line] ? 
+                          (capacityAnalysis.lineCapacities[aggregate.line].used / capacityAnalysis.lineCapacities[aggregate.line].capacity) * 100 :
+                          (aggregate.totalPans / 100) * 100
+                        )}%`
+                      }}
+                    ></div>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
-                {aggregate.items.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <div className="font-medium text-gray-900">{item.sku}</div>
-                      <div className="text-sm text-gray-600">
-                        {item.line} • {item.timeSlot}
+                {aggregate.items.map((item) => {
+                  const itemWithWO = slotsWithWorkOrders.find(slot => slot.id === item.id);
+                  const isShortage = item.status === 'capacity-shortage';
+                  const totalPans = item.pansFromOrders + item.pansStandard;
+                  
+                  return (
+                    <div key={item.id} className={`flex items-center justify-between p-3 rounded-lg ${
+                      isShortage ? 'bg-red-50 border border-red-200' : 'bg-gray-50'
+                    }`}>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <div className="font-medium text-gray-900">{item.sku}</div>
+                          {itemWithWO?.hasWorkOrder && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              <Settings className="w-3 h-3 mr-1" />
+                              WO
+                            </span>
+                          )}
+                          {isShortage && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              Over Capacity
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {item.line} • {item.timeSlot}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium text-gray-900">
+                          {totalPans} pans
+                        </div>
+                        <div className="flex items-center justify-end space-x-2 mt-1">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}>
+                            {isShortage ? `Short ${Math.max(0, totalPans - 25)} pans` : getStatusText(item.status)}
+                          </span>
+                          {isShortage && (
+                            <div className="flex space-x-1">
+                              <button
+                                onClick={() => handleAutoReschedule(item)}
+                                className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+                              >
+                                Reschedule
+                              </button>
+                              <button
+                                onClick={() => handleSplitProduction(item)}
+                                className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
+                              >
+                                Split
+                              </button>
+                            </div>
+                          )}
+                          {!itemWithWO?.hasWorkOrder && !isShortage && (
+                            <button
+                              onClick={() => handleGenerateWorkOrder(item)}
+                              className="text-xs text-violet-600 hover:text-violet-700 font-medium"
+                            >
+                              Generate WO
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-medium text-gray-900">
-                        {item.pansFromOrders + item.pansStandard} pans
-                      </div>
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}>
-                        {getStatusText(item.status)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -237,6 +279,7 @@ export default function ProductionPlanning({
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pans (Orders)</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pans (Stock)</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Work Order</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -252,10 +295,163 @@ export default function ProductionPlanning({
                         {getStatusText(item.status)}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                      {item.hasWorkOrder ? (
+                        <div className="flex items-center justify-end space-x-2">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <Settings className="w-3 h-3 mr-1" />
+                            {item.workOrderNumber}
+                          </span>
+                          <button 
+                            className="text-blue-600 hover:text-blue-700"
+                            title="View Work Order"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleGenerateWorkOrder(item)}
+                          className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-violet-100 text-violet-700 hover:bg-violet-200"
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Generate WO
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Capacity Shortage Details Modal */}
+      {showCapacityModal && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-6 z-50">
+          <div className="w-full max-w-4xl bg-white border border-gray-200 rounded-lg shadow-lg max-h-[80vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Production Capacity Analysis</h3>
+              <button 
+                onClick={() => setShowCapacityModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              {/* Summary */}
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center mb-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
+                  <h4 className="font-medium text-red-900">Capacity Shortages Detected</h4>
+                </div>
+                <p className="text-sm text-red-700 mb-3">
+                  {capacityAnalysis.totalShortage} pans exceed available capacity across {capacityAnalysis.shortages.length} production line{capacityAnalysis.shortages.length > 1 ? 's' : ''}
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {capacityAnalysis.shortages.map(shortage => (
+                    <div key={shortage.line} className="bg-white border border-red-200 rounded p-3">
+                      <div className="font-medium text-gray-900">{shortage.line}</div>
+                      <div className="text-sm text-red-600">{shortage.utilization}% utilized</div>
+                      <div className="text-sm text-red-600">Short {shortage.shortage} pans</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Affected Production Slots */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-900 mb-3">Affected Production Slots</h4>
+                <div className="space-y-3">
+                  {productionSchedule.filter(slot => slot.status === 'capacity-shortage').map(slot => {
+                    const totalPans = slot.pansFromOrders + slot.pansStandard;
+                    const shortage = Math.max(0, totalPans - 25); // Assuming 25 pan capacity per slot
+                    
+                    return (
+                      <div key={slot.id} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <div className="font-medium text-gray-900">{slot.sku}</div>
+                            <div className="text-sm text-gray-600">{slot.line} • {slot.timeSlot}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium text-red-600">Short {shortage} pans</div>
+                            <div className="text-sm text-gray-600">{totalPans} total needed</div>
+                          </div>
+                        </div>
+                        
+                        {/* Resolution Options */}
+                        <div className="border-t border-red-200 pt-3">
+                          <div className="text-sm font-medium text-gray-700 mb-2">Resolution Options:</div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <button
+                              onClick={() => handleAutoReschedule(slot)}
+                              className="flex items-center justify-center px-3 py-2 bg-blue-100 text-blue-700 rounded-md text-sm hover:bg-blue-200"
+                            >
+                              <ArrowRight className="w-4 h-4 mr-1" />
+                              Move to Available Line
+                            </button>
+                            <button
+                              onClick={() => handleSplitProduction(slot)}
+                              className="flex items-center justify-center px-3 py-2 bg-green-100 text-green-700 rounded-md text-sm hover:bg-green-200"
+                            >
+                              <Package className="w-4 h-4 mr-1" />
+                              Split Across Slots
+                            </button>
+                            <button
+                              className="flex items-center justify-center px-3 py-2 bg-orange-100 text-orange-700 rounded-md text-sm hover:bg-orange-200"
+                            >
+                              <Clock className="w-4 h-4 mr-1" />
+                              Extend Hours
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Available Capacity */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">Available Capacity</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(capacityAnalysis.lineCapacities)
+                    .filter(([, data]) => data.used < data.capacity)
+                    .map(([line, data]) => (
+                      <div key={line} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="font-medium text-gray-900">{line}</div>
+                        <div className="text-sm text-green-600">
+                          {Math.round((data.used / data.capacity) * 100)}% utilized
+                        </div>
+                        <div className="text-sm text-green-600">
+                          {data.capacity - data.used} pans available
+                        </div>
+                        <div className="w-full bg-green-100 rounded-full h-2 mt-2">
+                          <div 
+                            className="bg-green-500 h-2 rounded-full"
+                            style={{ width: `${(data.used / data.capacity) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-end space-x-3">
+              <button 
+                onClick={() => setShowCapacityModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+              >
+                Close
+              </button>
+              <button className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm hover:bg-violet-700">
+                Auto-Optimize Schedule
+              </button>
+            </div>
           </div>
         </div>
       )}

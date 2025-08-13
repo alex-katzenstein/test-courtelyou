@@ -7,6 +7,7 @@ import {
   updateWorkOrderQuantities as svcUpdateQuantities,
   addTimeEntry as svcAddTimeEntry,
   endTimeEntry as svcEndTimeEntry,
+  generateWorkOrderFromPlanning as svcGenerateWorkOrder,
 } from './workOrdersService';
 
 // Context shape
@@ -15,6 +16,15 @@ interface WorkOrdersContextShape extends WorkOrdersState {
   updateWorkOrderQuantities: (workOrderId: string, quantities: { actualQty?: number; wasteQty?: number; freezeQty?: number }) => void;
   addTimeEntry: (entry: Omit<TimeEntry, 'id'>) => void;
   endTimeEntry: (timeEntryId: string) => void;
+  generateWorkOrderFromPlanning: (planningSlot: {
+    id: number;
+    sku: string;
+    line: string;
+    timeSlot: string;
+    pansFromOrders: number;
+    pansStandard: number;
+  }) => void;
+  getWorkOrderByPlanningId: (planningId: string) => WorkOrder | undefined;
 }
 
 const WorkOrdersContext = createContext<WorkOrdersContextShape | null>(null);
@@ -23,7 +33,8 @@ type Action =
   | { type: 'UPDATE_STATUS'; payload: { workOrderId: string; status: WorkOrderStatus; notes?: string } }
   | { type: 'UPDATE_QUANTITIES'; payload: { workOrderId: string; quantities: { actualQty?: number; wasteQty?: number; freezeQty?: number } } }
   | { type: 'ADD_TIME_ENTRY'; payload: Omit<TimeEntry, 'id'> }
-  | { type: 'END_TIME_ENTRY'; payload: { timeEntryId: string } };
+  | { type: 'END_TIME_ENTRY'; payload: { timeEntryId: string } }
+  | { type: 'GENERATE_FROM_PLANNING'; payload: { id: number; sku: string; line: string; timeSlot: string; pansFromOrders: number; pansStandard: number } };
 
 function reducer(state: WorkOrdersState, action: Action): WorkOrdersState {
   switch (action.type) {
@@ -35,6 +46,8 @@ function reducer(state: WorkOrdersState, action: Action): WorkOrdersState {
       return svcAddTimeEntry(state, action.payload);
     case 'END_TIME_ENTRY':
       return svcEndTimeEntry(state, action.payload.timeEntryId);
+    case 'GENERATE_FROM_PLANNING':
+      return svcGenerateWorkOrder(state, action.payload);
     default:
       return state;
   }
@@ -55,6 +68,10 @@ export const WorkOrdersProvider: React.FC<React.PropsWithChildren> = ({ children
       dispatch({ type: 'ADD_TIME_ENTRY', payload: entry }),
     endTimeEntry: (timeEntryId) => 
       dispatch({ type: 'END_TIME_ENTRY', payload: { timeEntryId } }),
+    generateWorkOrderFromPlanning: (planningSlot) => 
+      dispatch({ type: 'GENERATE_FROM_PLANNING', payload: planningSlot }),
+    getWorkOrderByPlanningId: (planningId) => 
+      state.workOrders.find(wo => wo.productionPlanningId === planningId),
   }), [state]);
 
   return (
